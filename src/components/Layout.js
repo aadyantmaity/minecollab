@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Pickaxe, LogOut, Map, Plus, Menu, X, User, Settings } from 'lucide-react';
+import { Pickaxe, LogOut, Map, Menu, X, User, Settings } from 'lucide-react';
 
 export default function Layout({ children }) {
     const { currentUser, logout } = useAuth();
-    const [error, setError] = useState('');
+    const [, setError] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

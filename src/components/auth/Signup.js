@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, AlertCircle, Pickaxe, User } from 'lucide-react';
 
@@ -22,29 +22,57 @@ export default function Signup() {
             return setError('Passwords do not match');
         }
 
+        const username = usernameRef.current.value.trim();
+        const usernameLower = username.toLowerCase();
+
+        // Basic validation
+        if (username.length < 3) return setError('Username must be at least 3 characters.');
+        if (!/^[a-zA-Z0-9_]+$/.test(username)) return setError('Username can only contain letters, numbers, and underscores.');
+
         try {
             setError('');
             setLoading(true);
+
+            // 1. Check if username is already taken (optimization to avoid creating auth user unnecessarily)
+            const usernameDocRef = doc(db, 'usernames', usernameLower);
+            const usernameDoc = await getDoc(usernameDocRef);
+            if (usernameDoc.exists()) {
+                throw new Error('Username is already taken.');
+            }
+
+            // 2. Create Auth User
             const userCredential = await signup(emailRef.current.value, passwordRef.current.value);
             const user = userCredential.user;
 
-            // Update Auth Profile
-            await updateUserProfile(user, {
-                displayName: usernameRef.current.value
-            });
+            try {
+                // 3. Reserve Username
+                await setDoc(usernameDocRef, { uid: user.uid });
 
-            // Create user document
-            await setDoc(doc(db, 'users', user.uid), {
-                email: user.email,
-                username: usernameRef.current.value,
-                createdAt: new Date().toISOString()
-            });
+                // 4. Update Auth Profile
+                await updateUserProfile(user, {
+                    displayName: username
+                });
 
-            await verifyEmail(user);
-            navigate('/');
+                // 5. Create user document
+                await setDoc(doc(db, 'users', user.uid), {
+                    email: user.email,
+                    username: username,
+                    usernameLower: usernameLower,
+                    createdAt: new Date().toISOString()
+                });
+
+                await verifyEmail(user);
+                navigate('/');
+            } catch (innerError) {
+                // Cleanup: If database writes fail, delete the auth user so they can try again
+                console.error("Signup flow failed after auth creation:", innerError);
+                await user.delete();
+                throw innerError;
+            }
+
         } catch (err) {
             console.error(err);
-            setError('Failed to create an account: ' + err.message);
+            setError(err.message);
         }
 
         setLoading(false);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../../firebase';
 import { collection, addDoc, onSnapshot, deleteDoc, doc, serverTimestamp, orderBy, query } from 'firebase/firestore';
-import { Plus, Trash2, MapPin, Copy, Layers, Command } from 'lucide-react';
+import { Plus, Trash2, MapPin, Command } from 'lucide-react';
 
 export default function CoordinatesList({ worldId }) {
     const [coords, setCoords] = useState([]);

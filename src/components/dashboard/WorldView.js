@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { db } from '../../firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { ArrowLeft, CheckSquare, Lightbulb, MapPin, Users, Loader } from 'lucide-react';
+import { ArrowLeft, CheckSquare, Lightbulb, MapPin, Loader } from 'lucide-react';
 
 // Sub-components (will import later)
 import TodoList from './features/TodoList';
